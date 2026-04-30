@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZenoSMP – Minecraft Server</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080c14;
+    --bg2: #0d1520;
+    --panel: #0f1c2e;
+    --border: #1a3050;
+    --accent: #00c8ff;
+    --accent2: #0ef0a0;
+    --accent3: #ff6b35;
+    --text: #c8dff0;
+    --text-dim: #5a7a99;
+    --owner:   #ff4d4d;
+    --coowner:  #ff884d;
+    --manager: #ffcc00;
+    --srdev:   #a855f7;
+    --dev:     #818cf8;
+    --admin:   #ef4444;
+    --srmod:   #22d3ee;
+    --mod:     #34d399;
+    --helper:  #94a3b8;
+  }
+ 
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+ 
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Exo 2', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+ 
+  /* ANIMATED BACKGROUND */
+  .bg-grid {
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,200,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,200,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none; z-index: 0;
+  }
+  .bg-glow {
+    position: fixed; width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(0,200,255,0.06) 0%, transparent 70%);
+    top: -100px; left: -100px;
+    pointer-events: none; z-index: 0;
+    animation: drift 20s ease-in-out infinite alternate;
+  }
+  .bg-glow2 {
+    position: fixed; width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(14,240,160,0.05) 0%, transparent 70%);
+    bottom: 0; right: 0;
+    pointer-events: none; z-index: 0;
+    animation: drift 15s ease-in-out infinite alternate-reverse;
+  }
+  @keyframes drift {
+    from { transform: translate(0,0); }
+    to   { transform: translate(80px,60px); }
+  }
+ 
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 40px; height: 64px;
+    background: rgba(8,12,20,0.9);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.8rem; font-weight: 700; letter-spacing: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .nav-links { display: flex; gap: 32px; list-style: none; }
+  .nav-links a {
+    color: var(--text-dim); text-decoration: none;
+    font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase;
+    font-weight: 600; transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-right { display: flex; align-items: center; gap: 16px; }
+  .nav-ip {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.9rem; letter-spacing: 2px;
+    color: var(--accent); cursor: pointer;
+    border: 1px solid rgba(0,200,255,0.3);
+    padding: 6px 14px; border-radius: 4px;
+    transition: all 0.2s; position: relative;
+  }
+  .nav-ip:hover { background: rgba(0,200,255,0.1); border-color: var(--accent); }
+  .online-dot {
+    display: inline-block; width: 8px; height: 8px;
+    background: var(--accent2); border-radius: 50%;
+    margin-right: 6px;
+    box-shadow: 0 0 6px var(--accent2);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; } 50% { opacity: 0.4; }
+  }
+  .admin-nav-btn {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--accent3); cursor: pointer;
+    border: 1px solid rgba(255,107,53,0.3);
+    padding: 6px 14px; border-radius: 4px;
+    transition: all 0.2s; background: none;
+    font-weight: 700;
+  }
+  .admin-nav-btn:hover { background: rgba(255,107,53,0.1); border-color: var(--accent3); }
+ 
+  /* HERO */
+  .hero {
+    position: relative; z-index: 1;
+    padding: 120px 40px 80px;
+    text-align: center;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .hero-badge {
+    font-size: 0.75rem; letter-spacing: 4px; text-transform: uppercase;
+    color: var(--accent2); border: 1px solid rgba(14,240,160,0.3);
+    padding: 6px 20px; border-radius: 100px; margin-bottom: 28px;
+    animation: fadeDown 0.6s ease both;
+  }
+  .hero h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: clamp(3.5rem, 10vw, 7rem);
+    font-weight: 700; letter-spacing: 8px; line-height: 1;
+    background: linear-gradient(135deg, #fff 30%, var(--accent) 70%, var(--accent2) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    animation: fadeDown 0.6s 0.1s ease both;
+  }
+  .hero-sub {
+    font-size: 1.1rem; color: var(--text-dim);
+    margin-top: 20px; letter-spacing: 3px; text-transform: uppercase;
+    animation: fadeDown 0.6s 0.2s ease both;
+  }
+  .hero-ip-box {
+    margin-top: 48px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 24px 48px;
+    display: flex; align-items: center; gap: 20px;
+    animation: fadeUp 0.6s 0.3s ease both;
+    cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .hero-ip-box:hover { border-color: var(--accent); box-shadow: 0 0 30px rgba(0,200,255,0.15); }
+  .ip-label { font-size: 0.7rem; letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim); }
+  .ip-value {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.8rem; font-weight: 700; letter-spacing: 4px; color: var(--accent);
+  }
+  .ip-copy-btn {
+    background: rgba(0,200,255,0.1); border: 1px solid rgba(0,200,255,0.3);
+    color: var(--accent); padding: 8px 16px; border-radius: 6px;
+    font-family: 'Exo 2', sans-serif; font-size: 0.8rem; letter-spacing: 2px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .ip-copy-btn:hover { background: rgba(0,200,255,0.2); }
+ 
+  .hero-stats {
+    margin-top: 48px; display: flex; gap: 40px;
+    animation: fadeUp 0.6s 0.4s ease both;
+  }
+  .stat-box {
+    text-align: center; padding: 20px 32px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+  }
+  .stat-num { font-family: 'Rajdhani', sans-serif; font-size: 2rem; font-weight: 700; color: #fff; }
+  .stat-num span { color: var(--accent2); }
+  .stat-label { font-size: 0.7rem; letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim); margin-top: 4px; }
+ 
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+ 
+  .divider {
+    height: 1px; max-width: 1200px; margin: 0 auto;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    position: relative; z-index: 1;
+  }
+ 
+  /* SECTIONS */
+  .section {
+    position: relative; z-index: 1;
+    padding: 80px 40px; max-width: 1200px; margin: 0 auto;
+  }
+  .section-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 2rem; font-weight: 700; letter-spacing: 4px; text-transform: uppercase;
+    display: flex; align-items: center; gap: 16px; margin-bottom: 48px;
+  }
+  .section-title::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, var(--border), transparent);
+  }
+  .section-title .line-accent { color: var(--accent); }
+ 
+  /* INFO CARDS */
+  .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+  .info-card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 28px;
+    transition: border-color 0.2s, transform 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .info-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .info-card:hover { border-color: rgba(0,200,255,0.4); transform: translateY(-4px); }
+  .info-card:hover::before { opacity: 1; }
+  .info-icon { font-size: 2rem; margin-bottom: 16px; }
+  .info-card h3 { font-family: 'Rajdhani', sans-serif; font-size: 1.2rem; letter-spacing: 2px; margin-bottom: 8px; }
+  .info-card p { color: var(--text-dim); font-size: 0.9rem; line-height: 1.6; }
+ 
+  /* ROLES LEGEND */
+  .roles-legend { display: flex; flex-wrap: wrap; gap: 12px; }
+  .legend-badge {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.95rem; letter-spacing: 2px; font-weight: 600;
+    background: var(--panel); border: 1px solid var(--border);
+    padding: 8px 18px; border-radius: 100px;
+  }
+ 
+  /* TEAM */
+  .role-group { margin-bottom: 40px; }
+  .role-group-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.1rem; letter-spacing: 3px; font-weight: 700; text-transform: uppercase;
+    margin-bottom: 16px; padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .team-grid { display: flex; flex-wrap: wrap; gap: 12px; }
+  .member-card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 20px;
+    display: flex; align-items: center; gap: 14px;
+    transition: transform 0.2s, border-color 0.2s;
+    min-width: 180px;
+  }
+  .member-card:hover { transform: translateY(-3px); }
+  .member-avatar {
+    width: 42px; height: 42px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Rajdhani', sans-serif; font-size: 1rem; font-weight: 700;
+    color: #fff; flex-shrink: 0;
+  }
+  .member-name { font-family: 'Rajdhani', sans-serif; font-size: 1rem; font-weight: 700; letter-spacing: 1px; }
+  .member-role { font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); margin-top: 2px; }
+ 
+  .role-owner   .member-card { border-color: rgba(255,77,77,0.3); }
+  .role-owner   .member-avatar { background: rgba(255,77,77,0.2); color: var(--owner); }
+  .role-owner   .member-name  { color: var(--owner); }
+  .role-owner   .role-group-title { color: var(--owner); }
+ 
+  .role-coowner  .member-card { border-color: rgba(255,136,77,0.3); }
+  .role-coowner  .member-avatar { background: rgba(255,136,77,0.2); color: var(--coowner); }
+  .role-coowner  .member-name  { color: var(--coowner); }
+  .role-coowner  .role-group-title { color: var(--coowner); }
+ 
+  .role-manager .member-card { border-color: rgba(255,204,0,0.3); }
+  .role-manager .member-avatar { background: rgba(255,204,0,0.2); color: var(--manager); }
+  .role-manager .member-name  { color: var(--manager); }
+  .role-manager .role-group-title { color: var(--manager); }
+ 
+  .role-srdev   .member-card { border-color: rgba(168,85,247,0.3); }
+  .role-srdev   .member-avatar { background: rgba(168,85,247,0.2); color: var(--srdev); }
+  .role-srdev   .member-name  { color: var(--srdev); }
+  .role-srdev   .role-group-title { color: var(--srdev); }
+ 
+  .role-dev     .member-card { border-color: rgba(129,140,248,0.3); }
+  .role-dev     .member-avatar { background: rgba(129,140,248,0.2); color: var(--dev); }
+  .role-dev     .member-name  { color: var(--dev); }
+  .role-dev     .role-group-title { color: var(--dev); }
+ 
+  .role-admin   .member-card { border-color: rgba(239,68,68,0.3); }
+  .role-admin   .member-avatar { background: rgba(239,68,68,0.2); color: var(--admin); }
+  .role-admin   .member-name  { color: var(--admin); }
+  .role-admin   .role-group-title { color: var(--admin); }
+ 
+  .role-srmod   .member-card { border-color: rgba(34,211,238,0.3); }
+  .role-srmod   .member-avatar { background: rgba(34,211,238,0.2); color: var(--srmod); }
+  .role-srmod   .member-name  { color: var(--srmod); }
+  .role-srmod   .role-group-title { color: var(--srmod); }
+ 
+  .role-mod     .member-card { border-color: rgba(52,211,153,0.3); }
+  .role-mod     .member-avatar { background: rgba(52,211,153,0.2); color: var(--mod); }
+  .role-mod     .member-name  { color: var(--mod); }
+  .role-mod     .role-group-title { color: var(--mod); }
+ 
+  .role-helper  .member-card { border-color: rgba(148,163,184,0.3); }
+  .role-helper  .member-avatar { background: rgba(148,163,184,0.2); color: var(--helper); }
+  .role-helper  .member-name  { color: var(--helper); }
+  .role-helper  .role-group-title { color: var(--helper); }
+ 
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--accent2); color: #000;
+    font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-spacing: 2px;
+    padding: 12px 24px; border-radius: 8px;
+    opacity: 0; pointer-events: none; transition: all 0.3s; z-index: 9999;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+ 
+  /* FOOTER */
+  footer {
+    position: relative; z-index: 1;
+    border-top: 1px solid var(--border);
+    padding: 32px 40px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .footer-logo {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.4rem; font-weight: 700; letter-spacing: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+ 
+  /* ===== ADMIN OVERLAY ===== */
+  .overlay {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+    align-items: center; justify-content: center;
+  }
+  .overlay.active { display: flex; }
+ 
+  /* LOGIN MODAL */
+  .login-box {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 16px; padding: 48px; width: 380px; text-align: center;
+    box-shadow: 0 0 60px rgba(0,200,255,0.1);
+  }
+  .login-box h2 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.8rem; letter-spacing: 4px; font-weight: 700;
+    color: var(--accent3); margin-bottom: 8px;
+  }
+  .login-box p { color: var(--text-dim); font-size: 0.85rem; margin-bottom: 32px; letter-spacing: 1px; }
+  .login-input {
+    width: 100%; background: var(--bg2); border: 1px solid var(--border);
+    color: var(--text); padding: 12px 16px; border-radius: 8px;
+    font-family: 'Exo 2', sans-serif; font-size: 1rem;
+    margin-bottom: 16px; transition: border-color 0.2s; outline: none;
+  }
+  .login-input:focus { border-color: var(--accent); }
+  .btn-primary {
+    width: 100%; padding: 12px; border-radius: 8px;
+    background: linear-gradient(90deg, var(--accent3), #ff4500);
+    color: #fff; font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem; font-weight: 700; letter-spacing: 3px;
+    border: none; cursor: pointer; text-transform: uppercase;
+    transition: opacity 0.2s;
+  }
+  .btn-primary:hover { opacity: 0.85; }
+  .login-error {
+    color: #ff4d4d; font-size: 0.8rem; margin-top: 12px;
+    display: none; letter-spacing: 1px;
+  }
+  .login-error.show { display: block; }
+  .btn-close {
+    position: absolute; top: 20px; right: 24px;
+    background: none; border: none; color: var(--text-dim);
+    font-size: 1.4rem; cursor: pointer; transition: color 0.2s;
+  }
+  .btn-close:hover { color: var(--text); }
+ 
+  /* ADMIN PANEL */
+  .admin-panel {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.9); backdrop-filter: blur(8px);
+    overflow-y: auto;
+  }
+  .admin-panel.active { display: block; }
+  .admin-inner {
+    max-width: 900px; margin: 0 auto; padding: 40px 24px;
+  }
+  .admin-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 40px;
+  }
+  .admin-header h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 2rem; letter-spacing: 4px; font-weight: 700;
+    color: var(--accent3);
+  }
+  .btn-logout {
+    background: rgba(255,107,53,0.15); border: 1px solid rgba(255,107,53,0.3);
+    color: var(--accent3); padding: 8px 20px; border-radius: 6px;
+    font-family: 'Rajdhani', sans-serif; font-size: 0.9rem; font-weight: 700;
+    letter-spacing: 2px; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-logout:hover { background: rgba(255,107,53,0.25); }
+ 
+  .admin-card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 28px; margin-bottom: 24px;
+  }
+  .admin-card h3 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.2rem; font-weight: 700; letter-spacing: 3px;
+    margin-bottom: 20px; text-transform: uppercase;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .admin-card h3 .badge {
+    font-size: 0.65rem; padding: 2px 8px; border-radius: 4px;
+    background: rgba(0,200,255,0.1); color: var(--accent);
+    border: 1px solid rgba(0,200,255,0.2);
+  }
+ 
+  .ip-edit-row {
+    display: flex; gap: 12px; align-items: center;
+  }
+  .ip-edit-row input {
+    flex: 1; background: var(--bg2); border: 1px solid var(--border);
+    color: var(--text); padding: 12px 16px; border-radius: 8px;
+    font-family: 'Rajdhani', sans-serif; font-size: 1.1rem; letter-spacing: 3px;
+    outline: none; transition: border-color 0.2s;
+  }
+  .ip-edit-row input:focus { border-color: var(--accent); }
+  .btn-save {
+    background: rgba(0,200,255,0.15); border: 1px solid rgba(0,200,255,0.3);
+    color: var(--accent); padding: 12px 24px; border-radius: 8px;
+    font-family: 'Rajdhani', sans-serif; font-size: 0.9rem; font-weight: 700;
+    letter-spacing: 2px; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  }
+  .btn-save:hover { background: rgba(0,200,255,0.25); }
+  .btn-save.success { background: rgba(14,240,160,0.2); border-color: var(--accent2); color: var(--accent2); }
+ 
+  /* RANK EDITOR */
+  .rank-section { margin-bottom: 20px; }
+  .rank-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0; cursor: pointer; user-select: none;
+  }
+  .rank-label {
+    font-family: 'Rajdhani', sans-serif; font-size: 1rem; font-weight: 700; letter-spacing: 2px;
+  }
+  .rank-count {
+    font-size: 0.75rem; color: var(--text-dim); letter-spacing: 1px; margin-left: 8px;
+  }
+  .rank-toggle {
+    color: var(--text-dim); font-size: 0.8rem; transition: transform 0.2s;
+  }
+  .rank-toggle.open { transform: rotate(180deg); }
+  .rank-members { padding: 12px 0; display: none; }
+  .rank-members.open { display: block; }
+  .member-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .member-tag {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--bg2); border: 1px solid var(--border);
+    padding: 5px 12px; border-radius: 100px;
+    font-size: 0.85rem; letter-spacing: 1px;
+  }
+  .member-tag .remove-btn {
+    background: none; border: none; color: var(--text-dim);
+    cursor: pointer; font-size: 1rem; line-height: 1;
+    padding: 0; transition: color 0.2s;
+  }
+  .member-tag .remove-btn:hover { color: #ff4d4d; }
+  .add-member-row {
+    display: flex; gap: 8px;
+  }
+  .add-member-row input {
+    flex: 1; background: var(--bg2); border: 1px solid var(--border);
+    color: var(--text); padding: 9px 14px; border-radius: 6px;
+    font-family: 'Exo 2', sans-serif; font-size: 0.9rem;
+    outline: none; transition: border-color 0.2s;
+  }
+  .add-member-row input:focus { border-color: var(--accent); }
+  .btn-add {
+    background: rgba(14,240,160,0.15); border: 1px solid rgba(14,240,160,0.3);
+    color: var(--accent2); padding: 9px 18px; border-radius: 6px;
+    font-family: 'Rajdhani', sans-serif; font-size: 0.85rem; font-weight: 700;
+    letter-spacing: 2px; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-add:hover { background: rgba(14,240,160,0.25); }
+ 
+  .rank-divider {
+    height: 1px; background: var(--border); margin: 4px 0;
+  }
+ 
+  .save-all-bar {
+    position: sticky; bottom: 20px;
+    display: flex; justify-content: center; margin-top: 16px;
+  }
+  .btn-save-all {
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    color: #000; padding: 14px 48px; border-radius: 100px;
+    font-family: 'Rajdhani', sans-serif; font-size: 1rem; font-weight: 700;
+    letter-spacing: 3px; cursor: pointer; border: none;
+    box-shadow: 0 4px 24px rgba(0,200,255,0.25);
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .btn-save-all:hover { opacity: 0.9; transform: scale(1.03); }
+ 
+  .admin-success-bar {
+    background: rgba(14,240,160,0.1); border: 1px solid rgba(14,240,160,0.3);
+    color: var(--accent2); padding: 12px 20px; border-radius: 8px;
+    text-align: center; font-size: 0.9rem; letter-spacing: 2px;
+    margin-bottom: 16px; display: none;
+  }
+  .admin-success-bar.show { display: block; }
+ 
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    nav { padding: 0 20px; }
+    .nav-links { display: none; }
+    .hero { padding: 80px 20px 60px; }
+    .hero-stats { flex-direction: column; gap: 12px; }
+    .hero-ip-box { flex-direction: column; padding: 20px; }
+    .section { padding: 60px 20px; }
+    footer { flex-direction: column; gap: 16px; text-align: center; }
+    .ip-edit-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+ 
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+<div class="bg-glow2"></div>
+ 
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">ZenoSMP</div>
+  <ul class="nav-links">
+    <li><a href="#info">Server</a></li>
+    <li><a href="#team">Team</a></li>
+    <li><a href="#rollen">Ränge</a></li>
+  </ul>
+  <div class="nav-right">
+    <div class="nav-ip" onclick="copyIP()">
+      <span class="online-dot"></span><span id="navIP">play.zenosmp.de</span>
+    </div>
+    <button class="admin-nav-btn" onclick="openLogin()">🔐 Adminpanel</button>
+  </div>
+</nav>
+ 
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">☁ Survival Minecraft Server</div>
+  <h1>ZENOSMP</h1>
+  <p class="hero-sub">Erlebe Minecraft auf einem ganz neuen Level</p>
+ 
+  <div class="hero-ip-box" onclick="copyIP()">
+    <div>
+      <div class="ip-label">Server IP</div>
+      <div class="ip-value" id="heroIP">play.zenosmp.de</div>
+    </div>
+    <button class="ip-copy-btn" id="copyBtn">📋 Kopieren</button>
+  </div>
+ 
+  <div class="hero-stats">
+    <div class="stat-box">
+      <div class="stat-num"><span id="playerCount">0</span></div>
+      <div class="stat-label">Spieler Online</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">1<span>.21</span></div>
+      <div class="stat-label">Minecraft Version</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num"><span>24</span>/7</div>
+      <div class="stat-label">Online</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num"><span id="memberCount">0</span></div>
+      <div class="stat-label">Team Mitglieder</div>
+    </div>
+  </div>
+</section>
+ 
+<div class="divider"></div>
+ 
+<!-- SERVER INFO -->
+<section class="section" id="info">
+  <h2 class="section-title"><span class="line-accent">01</span> Server Informationen</h2>
+  <div class="info-grid">
+    <div class="info-card">
+      <div class="info-icon">⚔️</div>
+      <h3>Survival SMP</h3>
+      <p>Klassisches Survival-Erlebnis mit besonderen Features. Baue, erforsche und überlebe gemeinsam mit anderen Spielern.</p>
+    </div>
+    <div class="info-card">
+      <div class="info-icon">🌍</div>
+      <h3>Große Welt</h3>
+      <p>Eine riesige Welt wartet auf dich. Endlose Ressourcen und spannende Biome zum Entdecken.</p>
+    </div>
+    <div class="info-card">
+      <div class="info-icon">🛡️</div>
+      <h3>Anti-Cheat</h3>
+      <p>Fortschrittliches Anti-Cheat System sorgt für ein faires Spielerlebnis. Keine Hacker, keine Cheater.</p>
+    </div>
+    <div class="info-card">
+      <div class="info-icon">🏆</div>
+      <h3>Rangsystem</h3>
+      <p>Klares Team-Hierarchie-System mit Owner, Co.Owner, Manager, Dev, Admin, Mod und Helper.</p>
+    </div>
+    <div class="info-card">
+      <div class="info-icon">💬</div>
+      <h3>Community</h3>
+      <p>Eine freundliche und aktive Community. Trete unserem Discord bei und bleibe immer up-to-date.</p>
+    </div>
+    <div class="info-card">
+      <div class="info-icon">🔧</div>
+      <h3>Custom Plugins</h3>
+      <p>Eigens entwickelte Plugins für ein einzigartiges Erlebnis, das du so nur auf ZenoSMP findest.</p>
+    </div>
+  </div>
+</section>
+ 
+<div class="divider"></div>
+ 
+<!-- ROLES LEGEND -->
+<section class="section" id="rollen">
+  <h2 class="section-title"><span class="line-accent">02</span> Ränge & Hierarchie</h2>
+  <div class="roles-legend">
+    <span class="legend-badge" style="color:var(--owner);">👑 Owner</span>
+    <span class="legend-badge" style="color:var(--coowner);">🔱 Co.Owner</span>
+    <span class="legend-badge" style="color:var(--manager);">⭐ Manager</span>
+    <span class="legend-badge" style="color:var(--srdev);">🧬 Sr.Dev</span>
+    <span class="legend-badge" style="color:var(--dev);">💻 Dev</span>
+    <span class="legend-badge" style="color:var(--admin);">🔴 Admin</span>
+    <span class="legend-badge" style="color:var(--srmod);">🔷 SrMod</span>
+    <span class="legend-badge" style="color:var(--mod);">🟢 Mod</span>
+    <span class="legend-badge" style="color:var(--helper);">🔹 Helper</span>
+  </div>
+</section>
+ 
+<div class="divider"></div>
+ 
+<!-- TEAM -->
+<section class="section" id="team">
+  <h2 class="section-title"><span class="line-accent">03</span> Unser Team</h2>
+  <div id="teamContainer"></div>
+</section>
+ 
+<footer>
+  <div class="footer-logo">ZENOSMP</div>
+  <div style="text-align:center;color:var(--text-dim);font-size:0.8rem;">
+    <span class="online-dot"></span>Server: <span id="footerIP">play.zenosmp.de</span>
+    <br><span style="font-size:0.7rem;opacity:0.5;letter-spacing:1px;">© 2025 ZenoSMP. Alle Rechte vorbehalten.</span>
+  </div>
+  <button class="admin-nav-btn" onclick="openLogin()" style="font-size:0.75rem;">🔐 Admin Panel</button>
+</footer>
+ 
+<div class="toast" id="toast">✓ IP Kopiert!</div>
+ 
+<!-- LOGIN OVERLAY -->
+<div class="overlay" id="loginOverlay">
+  <div class="login-box" style="position:relative;">
+    <button class="btn-close" onclick="closeLogin()">✕</button>
+    <h2>🔐 ADMIN</h2>
+    <p>Passwort eingeben um fortzufahren</p>
+    <input class="login-input" type="password" id="pwInput" placeholder="Passwort..." onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn-primary" onclick="doLogin()">EINLOGGEN</button>
+    <div class="login-error" id="loginError">❌ Falsches Passwort</div>
+  </div>
+</div>
+ 
+<!-- ADMIN PANEL -->
+<div class="admin-panel" id="adminPanel">
+  <div class="admin-inner">
+    <div class="admin-header">
+      <h1>🔐 ADMIN PANEL</h1>
+      <button class="btn-logout" onclick="doLogout()">✕ Ausloggen</button>
+    </div>
+ 
+    <div class="admin-success-bar" id="adminSuccess">✓ Änderungen gespeichert!</div>
+ 
+    <!-- IP EDITOR -->
+    <div class="admin-card">
+      <h3>🌐 Server IP <span class="badge">BEARBEITEN</span></h3>
+      <div class="ip-edit-row">
+        <input type="text" id="ipInput" placeholder="z.B. play.zenosmp.de">
+        <button class="btn-save" id="ipSaveBtn" onclick="saveIP()">💾 Speichern</button>
+      </div>
+    </div>
+ 
+    <!-- RANK EDITORS -->
+    <div class="admin-card">
+      <h3>👥 Team Mitglieder <span class="badge">VERWALTEN</span></h3>
+      <div id="rankEditors"></div>
+      <div class="save-all-bar">
+        <button class="btn-save-all" onclick="saveAll()">💾 ALLE ÄNDERUNGEN SPEICHERN</button>
+      </div>
+    </div>
+  </div>
+</div>
+ 
+<script>
+// ============================================================
+// CONFIG – Passwort hier ändern!
+// ============================================================
+const ADMIN_PASSWORD = "admin123";
+ 
+// ============================================================
+// RANK DEFINITIONS
+// ============================================================
+const RANKS = [
+  { id: "owner",   label: "👑 Owner",    color: "var(--owner)" },
+  { id: "coowner", label: "🔱 Co.Owner", color: "var(--coowner)" },
+  { id: "manager", label: "⭐ Manager",  color: "var(--manager)" },
+  { id: "srdev",   label: "🧬 Sr.Dev",   color: "var(--srdev)" },
+  { id: "dev",     label: "💻 Dev",      color: "var(--dev)" },
+  { id: "admin",   label: "🔴 Admin",    color: "var(--admin)" },
+  { id: "srmod",   label: "🔷 SrMod",    color: "var(--srmod)" },
+  { id: "mod",     label: "🟢 Mod",      color: "var(--mod)" },
+  { id: "helper",  label: "🔹 Helper",   color: "var(--helper)" },
+];
+ 
+// ============================================================
+// DATA (localStorage)
+// ============================================================
+function getData() {
+  try {
+    const raw = localStorage.getItem('zenosmp_data');
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  // defaults
+  return {
+    ip: "play.zenosmp.de",
+    team: {
+      owner:   [],
+      coowner: [],
+      manager: [],
+      srdev:   [],
+      dev:     [],
+      admin:   [],
+      srmod:   [],
+      mod:     [],
+      helper:  [],
+    }
+  };
+}
+ 
+function saveData(data) {
+  localStorage.setItem('zenosmp_data', JSON.stringify(data));
+}
+ 
+// ============================================================
+// IP
+// ============================================================
+function updateIPDisplay(ip) {
+  document.getElementById('navIP').textContent    = ip;
+  document.getElementById('heroIP').textContent   = ip;
+  document.getElementById('footerIP').textContent = ip;
+}
+ 
+function copyIP() {
+  const ip = getData().ip;
+  navigator.clipboard.writeText(ip).then(() => {
+    const toast = document.getElementById('toast');
+    const btn   = document.getElementById('copyBtn');
+    toast.classList.add('show');
+    btn.textContent = '✓ Kopiert!';
+    setTimeout(() => { toast.classList.remove('show'); btn.textContent = '📋 Kopieren'; }, 2000);
+  });
+}
+ 
+function saveIP() {
+  const val = document.getElementById('ipInput').value.trim();
+  if (!val) return;
+  const data = getData();
+  data.ip = val;
+  saveData(data);
+  updateIPDisplay(val);
+  const btn = document.getElementById('ipSaveBtn');
+  btn.textContent = '✓ Gespeichert';
+  btn.classList.add('success');
+  setTimeout(() => { btn.textContent = '💾 Speichern'; btn.classList.remove('success'); }, 2000);
+}
+ 
+// ============================================================
+// TEAM RENDER
+// ============================================================
+function renderTeam() {
+  const data = getData();
+  updateIPDisplay(data.ip);
+  const container = document.getElementById('teamContainer');
+  container.innerHTML = '';
+  let total = 0;
+ 
+  RANKS.forEach(rank => {
+    const members = data.team[rank.id] || [];
+    if (!members.length) return;
+    total += members.length;
+ 
+    const group = document.createElement('div');
+    group.className = `role-group role-${rank.id}`;
+    group.innerHTML = `
+      <div class="role-group-title">${rank.label}</div>
+      <div class="team-grid">
+        ${members.map(name => `
+          <div>
+            <div class="member-card">
+              <div class="member-avatar">${name.substring(0,2).toUpperCase()}</div>
+              <div class="member-info">
+                <div class="member-name">${name}</div>
+                <div class="member-role">${rank.label.replace(/./u,'').trim()}</div>
+              </div>
+            </div>
+          </div>`).join('')}
+      </div>`;
+    container.appendChild(group);
+  });
+ 
+  document.getElementById('memberCount').textContent = total;
+}
+ 
+// ============================================================
+// ADMIN PANEL – RANK EDITORS
+// ============================================================
+let tempTeam = {}; // working copy while panel open
+ 
+function buildRankEditors() {
+  const data = getData();
+  tempTeam = JSON.parse(JSON.stringify(data.team)); // deep copy
+  const container = document.getElementById('rankEditors');
+  container.innerHTML = '';
+ 
+  RANKS.forEach(rank => {
+    const section = document.createElement('div');
+    section.className = 'rank-section';
+    section.id = `rs-${rank.id}`;
+ 
+    const members = tempTeam[rank.id] || [];
+ 
+    section.innerHTML = `
+      <div class="rank-divider"></div>
+      <div class="rank-header" onclick="toggleRank('${rank.id}')">
+        <span>
+          <span class="rank-label" style="color:${rank.color}">${rank.label}</span>
+          <span class="rank-count" id="cnt-${rank.id}">${members.length} Mitglied${members.length!==1?'er':''}</span>
+        </span>
+        <span class="rank-toggle" id="tog-${rank.id}">▼</span>
+      </div>
+      <div class="rank-members" id="rm-${rank.id}">
+        <div class="member-list" id="ml-${rank.id}"></div>
+        <div class="add-member-row">
+          <input type="text" id="ai-${rank.id}" placeholder="Spielername hinzufügen..."
+            onkeydown="if(event.key==='Enter')addMember('${rank.id}')">
+          <button class="btn-add" onclick="addMember('${rank.id}')">+ Hinzufügen</button>
+        </div>
+      </div>`;
+    container.appendChild(section);
+    renderMemberTags(rank.id);
+  });
+}
+ 
+function toggleRank(rankId) {
+  const rm  = document.getElementById(`rm-${rankId}`);
+  const tog = document.getElementById(`tog-${rankId}`);
+  rm.classList.toggle('open');
+  tog.classList.toggle('open');
+}
+ 
+function renderMemberTags(rankId) {
+  const list    = document.getElementById(`ml-${rankId}`);
+  const members = tempTeam[rankId] || [];
+  list.innerHTML = members.map((name, i) => `
+    <div class="member-tag">
+      <span>${name}</span>
+      <button class="remove-btn" onclick="removeMember('${rankId}',${i})">×</button>
+    </div>`).join('');
+  const cnt = document.getElementById(`cnt-${rankId}`);
+  cnt.textContent = `${members.length} Mitglied${members.length!==1?'er':''}`;
+}
+ 
+function addMember(rankId) {
+  const input = document.getElementById(`ai-${rankId}`);
+  const name  = input.value.trim();
+  if (!name) return;
+  if (!tempTeam[rankId]) tempTeam[rankId] = [];
+  if (tempTeam[rankId].includes(name)) { input.value = ''; return; }
+  tempTeam[rankId].push(name);
+  renderMemberTags(rankId);
+  input.value = '';
+}
+ 
+function removeMember(rankId, index) {
+  tempTeam[rankId].splice(index, 1);
+  renderMemberTags(rankId);
+}
+ 
+function saveAll() {
+  const data = getData();
+  data.team = tempTeam;
+  saveData(data);
+  renderTeam();
+  const bar = document.getElementById('adminSuccess');
+  bar.classList.add('show');
+  setTimeout(() => bar.classList.remove('show'), 3000);
+}
+ 
+// ============================================================
+// AUTH
+// ============================================================
+function openLogin() {
+  document.getElementById('loginOverlay').classList.add('active');
+  document.getElementById('pwInput').value = '';
+  document.getElementById('loginError').classList.remove('show');
+  setTimeout(() => document.getElementById('pwInput').focus(), 100);
+}
+ 
+function closeLogin() {
+  document.getElementById('loginOverlay').classList.remove('active');
+}
+ 
+function doLogin() {
+  const pw = document.getElementById('pwInput').value;
+  if (pw === ADMIN_PASSWORD) {
+    document.getElementById('loginOverlay').classList.remove('active');
+    openAdminPanel();
+  } else {
+    document.getElementById('loginError').classList.add('show');
+    document.getElementById('pwInput').value = '';
+    document.getElementById('pwInput').focus();
+  }
+}
+ 
+function openAdminPanel() {
+  const data = getData();
+  document.getElementById('ipInput').value = data.ip;
+  buildRankEditors();
+  document.getElementById('adminPanel').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+ 
+function doLogout() {
+  document.getElementById('adminPanel').classList.remove('active');
+  document.body.style.overflow = '';
+}
+ 
+// ============================================================
+// PLAYER COUNT ANIMATION
+// ============================================================
+let pc = 0;
+function animateCount() {
+  const target = Math.floor(Math.random() * 30) + 5;
+  const el = document.getElementById('playerCount');
+  const step = () => { if (pc < target) { pc++; el.textContent = pc; setTimeout(step, 40); } };
+  step();
+}
+ 
+// ============================================================
+// INIT
+// ============================================================
+renderTeam();
+animateCount();
+window.addEventListener('storage', renderTeam);
+</script>
+</body>
+</html>
+ 
